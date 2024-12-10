@@ -59,7 +59,7 @@ Let's use the tags we isolated previously and see if they give any numerical ins
 | 4-hours-or-less       |          4.67671 |         102.551   |        13.1848  |
 | 60-minutes-or-less    |          4.6681  |          45.6667  |        11.5558  |
 
-While the difference is not exactly large, there is a trend showing that recipes requiring less overall effort, do get higher ratings on average, with recipes that take a day or more outperforming those that might take over thirty minutes. This could be due to the time in those recipes involving just waiting as oppossed to active prep and labor, thus requiring less effort despite being time-consuming.  
+While the difference is not exactly large, there is a trend showing that recipes requiring less overall effort, do get higher ratings on average, with recipes that take a day or more outperforming those that might take over thirty minutes. This could be due to the time in those recipes involving just waiting as opposed to active prep and labor, thus requiring less effort despite being time-consuming.  
 
 ---
 
@@ -88,38 +88,51 @@ KS Test Statistic: 0.1500, P-Value: 0.0105
 The KS statistic of 0.1500 indicates that the largest difference between the cumulative distribution functions (CDFs) of the two groups is 15% of the data range.
 
 The plot suggests that recipes with more ingredients are more likely to include a description.
-The KS statistic measures the largest vertical gap between the two curves, which likely occurs around 1-6 ingredients, where the density of the missing group (in green) is visibly higher than the non-missing group (in blue). This difference could indicate that simpler recipes (with fewer ingredients) require less explanation, leading users to skip providing a description, and recipes with more ingredients might be perceived as more complex, prompting users to include descriptions for clarity and additional context and direction which is further validated by performing the same test on the `is_easy` column which shows a near identical density distribution and a KS Test statistic of 0.1374 with a slightly higher p-value of .0243.
+The KS statistic measures the largest vertical gap between the two curves, which likely occurs around 1-6 ingredients, where the density of the missing group (in green) is visibly higher than the non-missing group (in blue). This difference could indicate that simpler recipes (with fewer ingredients) require less explanation, leading users to skip providing a description, and recipes with more ingredients might be perceived as more complex, prompting users to include descriptions for clarity, additional context and direction which is further validated by performing the same test on the `is_easy` column which shows a near identical density distribution and a KS Test statistic of 0.1374 with a slightly higher p-value of .0243.
 
 ---
 
 ## Hypothesis Testing
 
-So far, `n_steps` has been the more varied of the column categories when trying to find a relationship with `ratings`, making it difficult to tell for sure if there is one at all. We'll try to perform a hypothesis test to see if we can uncover a more definitive metric that shows a relationship, or the absence of one. 
+So far, `n_steps` has been the more varied of the column categories when trying to find a relationship with `ratings`, making it difficult to tell for sure if there is one at all. We'll try to perform a hypothesis test to see if we can uncover a more definitive metric that shows a relationship, or the absence of one. Additionally, `n_ingredients` had some correlation to `n_steps` so we will also check the relationship between ingredients and `rating`.
 
-### Null Hypothesis
+### Null Hypotheses
 
-Under the null hypothesis $H_0$ : The number of steps has no influence on ratings. This implies that any observed difference in average ratings is due to random chance. We'll simulate this by shuffling the rating column to break the relationship between `n_steps` and `ratings`. The alternative is that number of steps does have an influence on ratings.
+Under the null hypothesis H_0 : The number of steps has no influence on ratings. This implies that any observed difference in average ratings is due to random chance. We'll simulate this by shuffling the rating column to break the relationship between `n_steps` and `ratings`. The alternative is that number of steps does have an influence on ratings.
 
-### Test Statistic:
+
+
+### Test Statistics:
 The test statistic is the difference in means:
 
-$$T = \bar{R}_{\text{simple}} - \bar{R}_{\text{complex}}\$$
+ T = SimpleMean - ComplexMean
 
 Where:
 
-- $\bar{R}_{\text{simple}}$: Mean rating of recipes classified as "simple" (based on fewer steps).
-- $\bar{R}_{\text{complex}}$: Mean rating of recipes classified as "complex" (based on more steps).
+- SimpleMean: Mean rating of recipes classified as "simple" (based on fewer steps / ingredients).
+- ComplexMean: Mean rating of recipes classified as "complex" (based on more steps/ ingredients).
 
 We'll group recipes by their number of steps by computing the median for the number of steps across recipes to create a somewhat even threshold between simple and complex recipes that's robust to outliers based on number of steps, and then we'll calculate the observed difference in means to see how often the null test statistics are as extreme of more extreme than the observed statistic.
 
 <iframe src="assets/n_stepsRatings_hypothesisTest.html" width=800 height=600 frameBorder=0></iframe>
 
-At a significance level of 0.01 we'd fail to reject the null, but at a 0.05 significance level we are able to reject the null and say that there is some relationship between `n_steps` and `rating`. In this case, we can see that the observed difference is not just due to random chance, and the number of steps does influence rating though it might not be the strongest predictor.  
+p-value: 0.039
+
+At a significance level of 0.05 we are able to reject the null and acknowledge there is some relationship between `n_steps` and `rating`. In this case, we can see that the observed difference is not just due to random chance, and the number of steps does influence rating to an extent.
+
+A hypothesis test for `n_ingredients` was performed in the same way, but with a resulting p-value of 0.134 we fail to reject the null, and we cannot say that number of ingredients has significant influence on rating. 
 
 ---
 
 ## Framing a Prediction Problem
 
+Thus far, we've found that the number of steps, and time it takes to complete a recipe seem to play some part in higher average ratings. We want to try and predict the average rating of a recipe based on features that are known at the time the recipe is submitted. This is a regression problem since the response variable being used is `avg_rating`, since it is continuous and ranges from 1 to 5 as opposed to `rating` which is discrete 1-5; using `avg_rating` as the response variable will allow us to get a more precise range of predictions. We chose avg_rating as the response variable because it directly reflects the quality of a recipe as perceived by users, making it a meaningful and interpretable target for improving recipe submissions or recommendations.
+
+The primary features used to predict `avg_rating` are `n_steps` (number of steps in the recipe) and `minutes` (time required to complete the recipe). These features are known at the time of submission and we've established a correlation to higher average ratings based on our exploratory analysis, and can be measured without future knowledge. We exclude any features or feedback generated after the recipe is submitted (e.g., user ratings, reviews) to ensure the model can be used in real-time prediction scenarios.
+
+To evaluate the model, we will use the Root Mean Squared Error (RMSE) metric. RMSE is chosen because it penalizes larger errors more heavily, which is crucial for accurately predicting ratings that follow a narrow range (1 to 5). RMSE provides a more interpretable measure of prediction error in the original units of `avg_rating` compared to other metrics like Mean Absolute Error (MAE). While metrics like R² can provide insight into the proportion of variance explained, RMSE directly informs us about how far predictions deviate from the true ratings, aligning with our goals.
+
+By focusing on features available at the time of submission and evaluating the model with RMSE, this approach ensures that predictions are both practical and relevant for improving recipe outcomes or providing tailored recommendations.
 ---
 
 ## Baseline Model
