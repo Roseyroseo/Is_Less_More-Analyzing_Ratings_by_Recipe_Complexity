@@ -67,7 +67,7 @@ While the difference is not exactly large, there is a trend showing that recipes
 
 As far as missing values in our data go, they can be mainly found in the `description`, `rating`, and `avg_rating` columns; which is reasonable since we've changed all ratings of 0 to missing to better represent unrated recipes, and not all recipes have a written description on the site. There's a single missing value for each `user_id`, `name`, and `review_date`, but these are trivial.
 
-Given that the missing values in `rating` are a result of unrated recipes, the missingness is directly tied to the fact that these recipes lack any user-provided rating, and this column has a missingness mechanism of NMAR since the missing values are specifically tied to the values themselves (the lack of user ratings). Since `avg_rating` is a column directly calculated from `rating` its missingness mechanism is MAR since the missing values in it depend on the `rating` column. Lastly, the missingness in the `description` column is also NMAR for the same reason `rating` is, the values are specifically tied to a lack of provided user description, and their missing status is specifically tied to the values themselves. We can try to do some permutation tests in order to check dependency along other columns.
+Given that the missing values in `rating` are a result of unrated recipes, the missingness is directly tied to the fact that these recipes lack any user-provided rating, and this column has a missingness mechanism of NMAR since the missing values are specifically tied to the values themselves (the lack of user ratings). Since `avg_rating` is a column directly calculated from `rating` its missingness mechanism is MAR since the missing values in it depend on the `rating` column. Lastly, the missingness in the `description` column is also NMAR for the same reason `rating` is, the values are specifically tied to a lack of provided user description, and their missing status is specifically tied to the values themselves. We can try to do some permutation tests in order to check dependency along other columns using the **difference in means** for missingness.
 
 Permutation test results for `description` column: 
 
@@ -79,11 +79,16 @@ Permutation test results for `description` column:
 |n_steps                |             0.7304 |             0.2210|
 |n_ingredients          |            -1.1347 |             0.0010|
 |is_easy                |             0.1374 |             0.0060|
-|rating                 |            -0.1750 |             0.0080|
 
-At a significance level of 0.01 we can say that the missingness of `description` does not depend on `recipe_id `, `contributor_id`, `minutes` or `n_steps`. These columns likely don't really influence the reason why users chose not to provide a description. On the other hand, `n_ingredients`, `is_easy` and `rating` show dependency with the missingness of `description`. This might suggest that recipes with fewer or more ingredients are more or less likely to have descriptions, and that recipes with the `easy` tag might influence whether or not users feel compelled to provide descriptions, whether they might feel it's unnecessary due to its simplicity, or they want to emphasize it.
+At a significance level of 0.01 we can say that the missingness of `description` does not depend on `recipe_id `, `contributor_id`, `minutes` or `n_steps`. These columns likely don't really influence the reason why users chose not to provide a description. On the other hand, `n_ingredients`, and `is_easy` show dependency with the missingness of `description`. This might suggest that recipes with fewer or more ingredients are more or less likely to have descriptions, and that recipes with the `easy` tag might influence whether or not users feel compelled to provide descriptions, whether they might feel it's unnecessary due to its simplicity, or they want to emphasize it. We'll do a ks test statistic to get more insights into `n_ingredients`
 
-Since the recipe submissions (and with them, a description) go up before any reviews are made on it it might be more reasonable to say that `rating` might be dependent on `description` making it MAR. This might imply that the absence of a description might also explain the absence of a rating. 
+<iframe src="assets/desc_ing_ksplot" width=800 height=600 frameBorder=0></iframe>
+KS Test Statistic: 0.1500, P-Value: 0.0105
+
+The KS statistic of 0.1500 indicates that the largest difference between the cumulative distribution functions (CDFs) of the two groups is 15% of the data range.
+
+The plot suggests that recipes with more ingredients are more likely to include a description.
+The KS statistic measures the largest vertical gap between the two curves, which likely occurs around 1-6 ingredients, where the density of the missing group (in green) is visibly higher than the non-missing group (in blue). This difference could indicate that simpler recipes (with fewer ingredients) require less explanation, leading users to skip providing a description, and recipes with more ingredients might be perceived as more complex, prompting users to include descriptions for clarity and additional context and direction which is further validated by performing the same test on the `is_easy` column which shows a near identical density distribution and a KS Test statistic of 0.1374 with a slightly higher p-value of .0243.
 
 ---
 
@@ -109,7 +114,7 @@ We'll group recipes by their number of steps by computing the median for the num
 
 <iframe src="assets/n_stepsRatings_hypothesisTest.html" width=800 height=600 frameBorder=0></iframe>
 
-At a significance level of 0.01 we'd fail to reject the null, but at a 0.05 significance level we are able to reject the null and say that there is some relationship between `n_steps` and `rating`. In this case, we can see that the observed difference is not just due to random chance.  
+At a significance level of 0.01 we'd fail to reject the null, but at a 0.05 significance level we are able to reject the null and say that there is some relationship between `n_steps` and `rating`. In this case, we can see that the observed difference is not just due to random chance, and the number of steps does influence rating though it might not be the strongest predictor.  
 
 ---
 
