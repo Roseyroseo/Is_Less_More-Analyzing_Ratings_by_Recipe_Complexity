@@ -16,7 +16,7 @@ This is a project for the DSC80 course at the University of California San Diego
 
 ## Data Cleaning and Exploratory Analysis 
 
-The data cleaning process begins by filling all `0` ratings with NaN since a rating of 0 implies that the recipe has yet to be rated, the lowest rating one can give is 1, thus it makes sense to treat 0 as a missing value as oppossed to a low rating. Then, the average rating per recipe was calculated and added to a column named `avg_rating`. As far as missing values go, they can be mainly found in the `description`, `rating`, and `avg_rating` columns; which is reasonable since we've changed all ratings of 0 to missing to better represent unrated recipes, and not all recipes have a written description on the site. There's a single missing value for each `user_id`, `name`, and `review_date`, they will be left as is for the time being to preserve their other column values, but will drop them as necessary should the analysis require it.
+The data cleaning process begins by filling all `0` ratings with NaN since a rating of 0 implies that the recipe has yet to be rated, the lowest rating one can give is 1, thus it makes sense to treat 0 as a missing value as oppossed to a low rating. Then, the average rating per recipe was calculated and added to a column named `avg_rating`. 
 
 We have added a `taglist` column by processing the `tags` column to represent actual lists instead of one long string of tags, both columns were kept in order to access tags as needed. All date columns were transformed to datetime objects, and `date` was renamed to `review_date` for clarity. Since the initial merge resulted in two `id` and `recipe_id` columns for the same recipe identifier, and the other column containing an identifier pertains to contributors and is aptly named `contributor_id`; we will drop `id` and change its type from float to int to save some memory.
 
@@ -38,17 +38,78 @@ This is an abbreviated preview of our `recipe_reviews` dataframe with only the r
 <iframe src="assets/tagcountsplot.html" width=800 height=600 frameBorder=0></iframe>
 
 
-Since the tags might yield some important categorical data for our analysis, we have identified some we might find useful like `easy` which we can use to identify simple recipes from the get-go, and others that give us descriptive ways of identifying simplicity. The plot showcases the popularity of simpler, less time-consuming recipes at a glance. Given the prevalence of the tag, we will give it its own boolean column. 
+Since the tags might yield some important categorical data for our analysis, we have identified some we might find useful which we can use to identify simple recipes from the get-go, and others that give us descriptive ways of identifying complexity. The plot showcases the popularity of simpler, less time-consuming recipes at a glance. Given the prevalence of the `easy` tag, we will give it its own column `is_easy`. 
+
+Next, we will try to find relationships among the numerical variables to get a better sense of what we can combine to find meaningful combinations that help measure the complexity of a recipe. 
 
 <iframe src="assets/correlationheatmap.html" width=800 height=600 frameBorder=0></iframe>
+
+Immediately some obvious trends are visible, recipes with more steps tend to take longer to prepare, and the more ingredients a recipe has, the more steps need to be taken to prepare it. We can also observe negative correlation between recipes marked as being easy and the number of steps involved in preparing them, which makes sense since simpler recipes would take less work. There aren't any strong correlations with `avg_rating` other than a slight negative one with `minutes` which indicates that recipes that take less time have a relationship with higher average ratings. 
+
+Let's use the tags we isolated previously and see if they give any numerical insights about average rating, preparation time, and number of steps in a pivot table:
+
+| tag                   |   average_rating |   average_minutes |   average_steps |
+|:----------------------|-----------------:|------------------:|----------------:|
+| 15-minutes-or-less    |          4.71858 |           9.17745 |         5.52557 |
+| 5-ingredients-or-less |          4.70803 |          49.7866  |         6.60927 |
+| 3-steps-or-less       |          4.69791 |          52.6216  |         5.76725 |
+| easy                  |          4.68376 |          61.3552  |         8.15145 |
+| 30-minutes-or-less    |          4.68151 |          25.0457  |         9.25098 |
+| 1-day-or-more         |          4.68113 |        1691.7     |        14.9182  |
+| 4-hours-or-less       |          4.67671 |         102.551   |        13.1848  |
+| 60-minutes-or-less    |          4.6681  |          45.6667  |        11.5558  |
+
+While the difference is not exactly large, there is a trend showing that recipes requiring less overall effort, do get higher ratings on average, with recipes that take a day or more outperforming those that might take over thirty minutes. This could be due to the time in those recipes involving just waiting as oppossed to active prep and labor, thus requiring less effort despite being time-consuming.  
 
 ---
 
 ## Assessment of Missingness
 
+As far as missing values in our data go, they can be mainly found in the `description`, `rating`, and `avg_rating` columns; which is reasonable since we've changed all ratings of 0 to missing to better represent unrated recipes, and not all recipes have a written description on the site. There's a single missing value for each `user_id`, `name`, and `review_date`, but these are trivial.
+
+Given that the missing values in `rating` are a result of unrated recipes, the missingness is directly tied to the fact that these recipes lack any user-provided rating, and this column has a missingness mechanism of NMAR since the missing values are specifically tied to the values themselves (the lack of user ratings). Since `avg_rating` is a column directly calculated from `rating` its missingness mechanism is MAR since the missing values in it depend on the `rating` column. Lastly, the missingness in the `description` column is also NMAR for the same reason `rating` is, the values are specifically tied to a lack of provided user description, and their missing status is specifically tied to the values themselves. We can try to do some permutation tests in order to check dependency along other columns.
+
+Permutation test results for `description` column: 
+
+| Column                | Observed Statistic |           P-value |
+|:----------------------|-------------------:|------------------:|
+|recipe_id              |         -5472.2216 |             0.3860|
+|contributor_id         |     -11471701.0962 |             0.6610|
+|minutes                |            -4.9060 |             0.7420|
+|n_steps                |             0.7304 |             0.2210|
+|n_ingredients          |            -1.1347 |             0.0010|
+|is_easy                |             0.1374 |             0.0060|
+|rating                 |            -0.1750 |             0.0080|
+
+At a significance level of 0.01 we can say that the missingness of `description` does not depend on `recipe_id `, `contributor_id`, `minutes` or `n_steps`. These columns likely don't really influence the reason why users chose not to provide a description. On the other hand, `n_ingredients`, `is_easy` and `rating` show dependency with the missingness of `description`. This might suggest that recipes with fewer or more ingredients are more or less likely to have descriptions, and that recipes with the `easy` tag might influence whether or not users feel compelled to provide descriptions, whether they might feel it's unnecessary due to its simplicity, or they want to emphasize it.
+
+Since the recipe submissions (and with them, a description) go up before any reviews are made on it it might be more reasonable to say that `rating` might be dependent on `description` making it MAR. This might imply that the absence of a description might also explain the absence of a rating. 
+
 ---
 
 ## Hypothesis Testing
+
+So far, `n_steps` has been the more varied of the column categories when trying to find a relationship with `ratings`, making it difficult to tell for sure if there is one at all. We'll try to perform a hypothesis test to see if we can uncover a more definitive metric that shows a relationship, or the absence of one. 
+
+### Null Hypothesis
+
+Under the null hypothesis $H_0$ : The number of steps has no influence on ratings. This implies that any observed difference in average ratings is due to random chance. We'll simulate this by shuffling the rating column to break the relationship between `n_steps` and `ratings`. The alternative is that number of steps does have an influence on ratings.
+
+### Test Statistic:
+The test statistic is the difference in means:
+
+$$T = \bar{R}_{\text{simple}} - \bar{R}_{\text{complex}}\$$
+
+Where:
+
+- $\bar{R}_{\text{simple}}$: Mean rating of recipes classified as "simple" (based on fewer steps).
+- $\bar{R}_{\text{complex}}$: Mean rating of recipes classified as "complex" (based on more steps).
+
+We'll group recipes by their number of steps by computing the median for the number of steps across recipes to create a somewhat even threshold between simple and complex recipes that's robust to outliers based on number of steps, and then we'll calculate the observed difference in means to see how often the null test statistics are as extreme of more extreme than the observed statistic.
+
+<iframe src="assets/n_stepsRatings_hypothesisTest.html" width=800 height=600 frameBorder=0></iframe>
+
+At a significance level of 0.01 we'd fail to reject the null, but at a 0.05 significance level we are able to reject the null and say that there is some relationship between `n_steps` and `rating`. In this case, we can see that the observed difference is not just due to random chance.  
 
 ---
 
