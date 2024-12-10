@@ -24,7 +24,7 @@ By looking at some of the preliminary data distributions we can observe a partic
 
 While there are still recipes remaining with values as high as 288000 minutes, causing a significant right skew in the data, these are legitimate recipes that are used for liqueur and other long-term preserved comestibles. Taking this into account, we will focus the analysis on recipes that can be made within 72 hours; this will allow for something like marinating overnight, slow-cooking & smoking to be well within the time-frame required for making a meal; and recipes for things like pickles and liquor are ultimately ingredients as opposed to meals. These ingredients require large amounts of time and are out of the scope of what we are trying to predict, given that preservation and fermentation waiting time does not necessarily contribute to complexity the way being on top of cooking time in order to reach the perfect temperature / doneness might be. This approach will only drop 445 rows from our data out of over 230k. While there might still exist recipes that aren't necessarily meals, since they are not extreme time values, they do not need to be dropped.
 
-This is an abbreviated preview of our `recipe_reviews` dataframe with only the recipe's id, minutes, number of steps, number of ingredients, rating and average rating. Both tag columns are omitted for presentation's sake.  
+This is an abbreviated preview of our `recipe_reviews` dataframe with only the recipe's id, minutes, number of steps, number of ingredients, rating and average rating. Both tag columns are omitted for the sake of presentation.  
 
 |   recipe_id |   minutes |   n_steps |   n_ingredients |   rating |   avg_rating |
 |------------:|----------:|----------:|----------------:|---------:|-------------:|
@@ -35,9 +35,12 @@ This is an abbreviated preview of our `recipe_reviews` dataframe with only the r
 |      306168 |        40 |         6 |               9 |        5 |            5 |
 
 
-Since the tags might yield some important categorical data for our analysis, we have identified some we might find useful like `easy` which we can use to identify simple recipes from the get-go, and others that give us descriptive ways of identifying simplicity. 
-
 <iframe src="assets/tagcountsplot.html" width=800 height=600 frameBorder=0></iframe>
+
+
+Since the tags might yield some important categorical data for our analysis, we have identified some we might find useful like `easy` which we can use to identify simple recipes from the get-go, and others that give us descriptive ways of identifying simplicity. The plot showcases the popularity of simpler, less time-consuming recipes at a glance. Given the prevalence of the tag, we will give it its own boolean column. 
+
+<iframe src="assets/correlationheatmap.html" width=800 height=600 frameBorder=0></iframe>
 
 ---
 
