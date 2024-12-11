@@ -8,7 +8,7 @@ This is a project for the DSC80 course at the University of California San Diego
 
 ## Introduction
 
- In our fast-paced world people have come to appreciate convenience and appreciate time savings anywhere possible, so are recipe ratings perhaps biased towards quick-and-easy solutions to feeding ourselves and our families? Or do ratings provide a good measure of simply how enjoyable a meal is despite the painstaking labor some of the tastiest dishes require? This analysis aims to focus on the relationship between the complexity of recipes and how well scored they are and assess how much weight this particular aspect holds in considering the overall rating of a recipe, and how well rated a simple recipe could be rated in comparison to a complex one.  
+ In our fast-paced world people have come to appreciate convenience and appreciate time savings anywhere possible, so are recipe ratings perhaps biased towards quick-and-easy solutions to feeding ourselves and our families? Or do ratings provide a good measure of simply how enjoyable a meal is despite the painstaking labor some of the tastiest dishes require? This analysis aims to focus on the relationship between the complexity of recipes, how well scored they are, assess how much weight these properties hold in considering the overall rating of a recipe, and how well rated a simple recipe could be rated in comparison to a complex one.  
  
  The dataset used is comprised of two separate .csv files scraped from [food.com](https://www.food.com/) by the authors of [this paper.](https://cseweb.ucsd.edu/~jmcauley/pdfs/emnlp19c.pdf) One contained recipes, and the other reviews for said recipes. 
 
@@ -16,7 +16,7 @@ This is a project for the DSC80 course at the University of California San Diego
 
 ## Data Cleaning and Exploratory Analysis 
 
-Our process begins by merging both csv files into a single dataset. Then we'll proceed filling all `0` recipe ratings with NaN since a rating of 0 implies that the recipe has yet to be rated, the lowest rating one can give is 1, thus it makes sense to treat 0 as a missing value as opposed to a low rating. Then, the average rating per recipe was calculated and added to a column named `avg_rating`. 
+Our process begins by merging both `.csv` files into a single dataset. We'll then proceed to fill all `0` recipe ratings with NaN since a rating of 0 implies that the recipe has yet to be rated, the lowest rating one can give is 1, thus it makes sense to treat 0 as a missing value as opposed to a low rating. Additionally, the average rating per recipe was calculated and added to a column named `avg_rating`. 
 
 We have added a `taglist` column by processing the `tags` column to represent actual lists instead of one long string of tags, both columns were kept in order to access tags as needed. All date columns were transformed to `pd.datetime` objects, and `date` was renamed to `review_date` for clarity. Since the initial merge resulted in two `id` and `recipe_id` columns for the same recipe identifier, and the other column containing an identifier pertains to contributors and is aptly named `contributor_id`; we will drop `id` and change its type from float to int to save some memory.
 
