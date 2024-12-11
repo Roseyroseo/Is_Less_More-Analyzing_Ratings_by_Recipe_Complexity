@@ -10,7 +10,37 @@ This is a project for the DSC80 course at the University of California San Diego
 
  In our fast-paced world people have come to appreciate convenience and appreciate time savings anywhere possible, so are recipe ratings perhaps biased towards quick-and-easy solutions to feeding ourselves and our families? Or do ratings provide a good measure of simply how enjoyable a meal is despite the painstaking labor some of the tastiest dishes require? This analysis aims to focus on the relationship between the complexity of recipes, how well scored they are, assess how much weight these properties hold in considering the overall rating of a recipe, and how well rated a simple recipe could be rated in comparison to a complex one.  
  
- The dataset used is comprised of two separate .csv files scraped from [food.com](https://www.food.com/) by the authors of [this paper.](https://cseweb.ucsd.edu/~jmcauley/pdfs/emnlp19c.pdf) One contained recipes, and the other reviews for said recipes. 
+ The dataset used is comprised of two separate `.csv` files scraped from [food.com](https://www.food.com/) by the authors of [this paper.](https://cseweb.ucsd.edu/~jmcauley/pdfs/emnlp19c.pdf) 
+
+ - `RAW_recipes.csv` contains recipes.
+ - `RAW_interactions.csv` contains reviews and ratings submitted for the recipes in `RAW_recipes.csv`. 
+
+ A description of each column in both datasets is given below.
+
+RECIPES
+
+|Column	          |Description|
+|----------------:|----------:|
+|'name'	          |Recipe name|
+|'id'	          |Recipe ID|
+|'minutes'	      |Minutes to prepare recipe|
+|'contributor_id' |User ID who submitted this recipe|
+|'submitted'	  |Date recipe was submitted|
+|'tags'	          |Food.com tags for recipe|
+|'nutrition'	  |Nutrition information in the form [calories (#), total fat (PDV), sugar (PDV), sodium (PDV), protein (PDV), saturated fat (PDV), carbohydrates (PDV)]; PDV stands for “percentage of daily value”|
+|'n_steps'	      |Number of steps in recipe|
+|'steps'	      |Text for recipe steps, in order|
+|'description'	  |User-provided description|
+
+RATINGS
+
+|Column	          |         Description|
+|----------------:|-------------------:|
+|'user_id'	      |             User ID|
+|'recipe_id'      |	          Recipe ID|
+|'date'	          | Date of interaction|
+|'rating'         |	       Rating given|
+|'review'         |         Review text|
 
 ---
 
