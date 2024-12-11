@@ -182,6 +182,7 @@ We'll perform a fairness analysis of the **Random Forest regression model** to d
 - **Test Statistic**: The absolute difference in RMSE between the two groups.
 
 <iframe src="assets/NullDistGroupRMSE.html" width=800 height=600 frameBorder=0></iframe>
+
 Observed RMSE Difference: 0.0099
 P-Value: 0.2340
 
