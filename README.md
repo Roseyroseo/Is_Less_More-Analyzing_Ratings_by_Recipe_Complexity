@@ -96,16 +96,12 @@ The KS statistic measures the largest vertical gap between the two curves, which
 
 So far, `n_steps` has been the more varied of the column categories when trying to find a relationship with `ratings`, making it difficult to tell for sure if there is one at all. We'll try to perform a hypothesis test to see if we can uncover a more definitive metric that shows a relationship, or the absence of one. Additionally, `n_ingredients` had some correlation to `n_steps` so we will also check the relationship between ingredients and `rating`.
 
-### Null Hypotheses
+Under the null hypothesis the number of steps and ingredients has no influence on ratings. This implies that any observed difference in average ratings is due to random chance. We'll simulate this by shuffling the rating column to break the relationship between `n_steps` and `ratings`; then do the same with `n_ingredients` and `ratings` The alternative is that number of steps / ingredients does have an influence on ratings.
 
-Under the null hypothesis *H₀* : The number of steps has no influence on ratings. This implies that any observed difference in average ratings is due to random chance. We'll simulate this by shuffling the rating column to break the relationship between `n_steps` and `ratings`. The alternative is that number of steps does have an influence on ratings.
+- **Null Hypothesis (H₀)**: The number of steps / ingredients has no influence on ratings, any observed difference in ratings is due to random chance.
+- **Alternative Hypothesis (H₁)**: There is a relationship between the number of steps / ingredients in a recipe and the rating.
 
-
-
-### Test Statistics:
-The test statistic is the difference in means:
-
- *T* = *SimpleMean* - *ComplexMean*
+- **Test Statistic**: The test statistic is the difference in means *T* = *SimpleMean* - *ComplexMean*
 
 Where:
 
@@ -145,7 +141,7 @@ The baseline model is a linear regression model trained to predict the average r
 
 The model was evaluated using Root Mean Squared Error (RMSE), which penalizes large prediction errors more heavily. The model achieved an RMSE of 0.4909, meaning that, on average, the model's predictions deviated from the actual ratings by approximately 0.49 on a scale of 1 to 5. Sample predictions (e.g., 4.68, 4.63) demonstrate that the model tends to predict values near the upper range of the target variable, with less variation compared to the actual values.
 
-While the RMSE suggests moderate accuracy, the model is limited in its predictive ability because it is overly simplistic. It only uses two quantitative features and assumes a linear relationship between these features and avg_rating. Furthermore, the small variation in predictions suggests the model may not fully capture the underlying complexity of recipe ratings, which is to be expected as it does not take into account one of the most important (yet abstract and difficult to capture) factors in rating a recipe: taste. 
+While the RMSE suggests moderate accuracy, the model is limited in its predictive ability because it's overly simplistic. It only uses two quantitative features and assumes a linear relationship between these features and `avg_rating`. Furthermore, the small variation in predictions suggests the model may not fully capture the underlying complexity of recipe ratings, which is to be expected as it does not take into account one of the most important (yet abstract and difficult to capture) factors in rating a recipe: subjective taste. 
 
 ---
 
@@ -172,7 +168,7 @@ Our Final Model represents an improvement over the Baseline Model in terms of RM
 
 ## Fairness Analysis
 
-We'll perform a fairness analysis of the **Random Forest regression model** to determine whether its performance (measured by RMSE) differs across two groups. For this fairness analysis, we'll use the `is_easy` column to compare:
+We'll perform a fairness analysis of the **Random Forest Regression** model to determine whether its performance (measured by RMSE) differs across two groups. For this fairness analysis, we'll use the `is_easy` column to compare:
 
 - **Group X**: Recipes marked as "easy" (`is_easy` = 1).
 - **Group Y**: Recipes not marked as "easy" (`is_easy` = 0).
