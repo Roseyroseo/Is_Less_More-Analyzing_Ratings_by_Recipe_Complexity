@@ -98,14 +98,14 @@ So far, `n_steps` has been the more varied of the column categories when trying 
 
 ### Null Hypotheses
 
-Under the null hypothesis H_0 : The number of steps has no influence on ratings. This implies that any observed difference in average ratings is due to random chance. We'll simulate this by shuffling the rating column to break the relationship between `n_steps` and `ratings`. The alternative is that number of steps does have an influence on ratings.
+Under the null hypothesis *H₀* : The number of steps has no influence on ratings. This implies that any observed difference in average ratings is due to random chance. We'll simulate this by shuffling the rating column to break the relationship between `n_steps` and `ratings`. The alternative is that number of steps does have an influence on ratings.
 
 
 
 ### Test Statistics:
 The test statistic is the difference in means:
 
- T = SimpleMean - ComplexMean
+ *T* = *SimpleMean* - *ComplexMean*
 
 Where:
 
@@ -126,21 +126,63 @@ A hypothesis test for `n_ingredients` was performed in the same way, but with a 
 
 ## Framing a Prediction Problem
 
-Thus far, we've found that the number of steps, and time it takes to complete a recipe seem to play some part in higher average ratings. We want to try and predict the average rating of a recipe based on features that are known at the time the recipe is submitted. This is a regression problem since the response variable being used is `avg_rating`, since it is continuous and ranges from 1 to 5 as opposed to `rating` which is discrete 1-5; using `avg_rating` as the response variable will allow us to get a more precise range of predictions. We chose avg_rating as the response variable because it directly reflects the quality of a recipe as perceived by users, making it a meaningful and interpretable target for improving recipe submissions or recommendations.
+Thus far, we've found that the number of steps, and time it takes to complete a recipe seem to play some part in higher average ratings. We want to try and predict the average rating of a recipe based on features that are known at the time the recipe is submitted. This is a regression problem since the response variable being used is `avg_rating`, since it is continuous and ranges from 1 to 5 as opposed to `rating` which is discrete 1-5; using `avg_rating` as the response variable will allow us to get a more precise range of predictions. We chose avg_rating as the response variable because it directly reflects the quality of a recipe as perceived by users, making it a meaningful and interpretable target.
 
 The primary features used to predict `avg_rating` are `n_steps` (number of steps in the recipe) and `minutes` (time required to complete the recipe). These features are known at the time of submission and we've established a correlation to higher average ratings based on our exploratory analysis, and can be measured without future knowledge. We exclude any features or feedback generated after the recipe is submitted (e.g., user ratings, reviews) to ensure the model can be used in real-time prediction scenarios.
 
-To evaluate the model, we will use the Root Mean Squared Error (RMSE) metric. RMSE is chosen because it penalizes larger errors more heavily, which is crucial for accurately predicting ratings that follow a narrow range (1 to 5). RMSE provides a more interpretable measure of prediction error in the original units of `avg_rating` compared to other metrics like Mean Absolute Error (MAE). While metrics like R² can provide insight into the proportion of variance explained, RMSE directly informs us about how far predictions deviate from the true ratings, aligning with our goals.
+To evaluate the model, we will use the Root Mean Squared Error (RMSE) metricsince it penalizes larger errors more heavily, which is crucial for accurately predicting ratings that follow a narrow range (1 to 5). RMSE provides a more interpretable measure of prediction error in the original units of `avg_rating` compared to other metrics like Mean Absolute Error (MAE). While metrics like R² can provide insight into the proportion of variance explained, RMSE directly informs us about how far predictions deviate from the true ratings, aligning with our goals.
 
-By focusing on features available at the time of submission and evaluating the model with RMSE, this approach ensures that predictions are both practical and relevant for improving recipe outcomes or providing tailored recommendations.
 ---
 
 ## Baseline Model
+
+|RMSE   |          Sample Prediction   |               Actual Value|
+|:------|-----------------------------:|--------------------------:|
+|0.4909 |   [4.68 4.68 4.63 4.68 4.68] | [5.   4.8  4.9  4.9  4.62]|
+
+
+The baseline model is a linear regression model trained to predict the average rating (`avg_rating`) of a recipe based on two quantitative features: `n_steps` (number of steps in the recipe) and `minutes` (time required to complete the recipe). The features used are both quantitative, meaning no ordinal or nominal variables were included in this baseline model; and since no categorical variables were used, no encodings (e.g., one-hot or ordinal encoding) were necessary. Both features were standardized using StandardScaler before training the model to ensure consistent scaling.
+
+The model was evaluated using Root Mean Squared Error (RMSE), which penalizes large prediction errors more heavily. The model achieved an RMSE of 0.4909, meaning that, on average, the model's predictions deviated from the actual ratings by approximately 0.49 on a scale of 1 to 5. Sample predictions (e.g., 4.68, 4.63) demonstrate that the model tends to predict values near the upper range of the target variable, with less variation compared to the actual values.
+
+While the RMSE suggests moderate accuracy, the model is limited in its predictive ability because it is overly simplistic. It only uses two quantitative features and assumes a linear relationship between these features and avg_rating. Furthermore, the small variation in predictions suggests the model may not fully capture the underlying complexity of recipe ratings, which is to be expected as it does not take into account one of the most important (yet abstract and difficult to capture) factors in rating a recipe: taste. 
 
 ---
 
 ## Final Model
 
+We will add the `is_easy` column to our list of parameters and we will create two new features: 
+
+- `log_minutes` : Log transformed `minutes` to reduce the effect of extreme outliers in prep time. 
+- `steps_per_minute` : Combines `n_steps` and `minutes` to capture overall recipe simplicity and efficiency.
+
+These additional features might offer some insights and could better capture the time and effort it takes to prepare a meal, which could factor into a better rating. 
+
+Given these additional features, the final model we chose was a Random Forest Regressor, as it achieved the lowest Root Mean Squared Error (RMSE) of 0.4762, outperforming both a baseline Linear Regression model (RMSE: 0.4903) and the Lasso Regression model (RMSE: 0.4906). Random Forest was chosen due to its ability to capture complex, non-linear relationships between the features and the `average_rating`. The hyperparameters for the Random Forest model were tuned using `GridSearchCV` with 5-fold cross-validation to ensure the model generalizes well to unseen data. 
+
+The best hyperparameters identified were:
+
+- `max_depth`: 20, which balances capturing complexity while avoiding overfitting.
+- `min_samples_split`: 10, ensuring splits occur only when sufficient data exists.
+- `n_estimators`: 300, providing a robust ensemble of trees.
+
+Our Final Model represents an improvement over the Baseline Model in terms of RMSE, which decreased from 0.4903 to 0.4762. This improvement demonstrates the value of incorporating additional engineered features (`log_minutes` and `steps_per_minute`), hyperparameter tuning, and using a non-linear model like Random Forest. While the improvement in RMSE is very modest, it shows how much of an impact an algorithm that can capture more complex patterns in the data can have.
+
 ---
 
 ## Fairness Analysis
+
+We'll perform a fairness analysis of the **Random Forest regression model** to determine whether its performance (measured by RMSE) differs across two groups. For this fairness analysis, we'll use the `is_easy` column to compare:
+
+- **Group X**: Recipes marked as "easy" (`is_easy` = 1).
+- **Group Y**: Recipes not marked as "easy" (`is_easy` = 0).
+
+- **Null Hypothesis (H₀)**: The model's RMSE for "easy" recipes is roughly the same as for "non-easy" recipes. Any observed difference is due to random chance.
+- **Alternative Hypothesis (H₁)**: The model's RMSE for "easy" recipes differs from its RMSE for "non-easy" recipes.
+- **Test Statistic**: The absolute difference in RMSE between the two groups.
+
+<iframe src="assets/NullDistGroupRMSE.html" width=800 height=600 frameBorder=0></iframe>
+Observed RMSE Difference: 0.0099
+P-Value: 0.2340
+
+The absolute difference in RMSE between the two groups (is_easy=1 and is_easy=0) is 0.0099; this is a very small difference, indicating that the model performs similarly on 'easy' and 'non-easy' recipes in terms of RMSE. The p-value is greater than any statistically significant threshold, so we fail to reject the null hypothesis and can deduce that the model's performance **does not differ significantly** between the two groups. Based on these results, we can conclude that the model is fair with respect to this grouping. 
